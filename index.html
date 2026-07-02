@@ -247,8 +247,12 @@ main { max-width: 1180px; margin: 0 auto; padding: 26px 20px 80px; }
 .legend-people { display: flex; gap: 20px; margin-bottom: 14px; flex-wrap: wrap; }
 .legend-people label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
 .person-swatch { width: 16px; height: 16px; border-radius: 4px; }
+.cal-people { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 6px; }
+.cal-person-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cal-person-head h3 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 1.3rem; }
+@media (max-width: 900px) { .cal-people { grid-template-columns: 1fr; } }
 .cal-grid { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-shadow: 0 4px 16px var(--shadow); }
-table.cal { border-collapse: collapse; width: 100%; min-width: 640px; }
+table.cal { border-collapse: collapse; width: 100%; min-width: 440px; }
 table.cal th, table.cal td { border: 1px solid var(--line); text-align: center; padding: 0; }
 table.cal th { background: var(--cream); font-family: 'Playfair Display'; color: var(--coffee); padding: 8px; font-size: .9rem; }
 table.cal td { height: 34px; cursor: pointer; position: relative; }
@@ -373,19 +377,30 @@ footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 24
     <div class="section-head">
       <div>
         <h2>When Can We Go?</h2>
-        <p>Tap a time slot to mark you're free. Green = both of you are open!</p>
+        <p>You each have your own calendar. Mark your free times — slots where you're <b>both</b> open turn green. ✓</p>
       </div>
-      <button class="btn ghost sm" onclick="clearAvailability()">Clear my slots</button>
     </div>
     <div class="divider"></div>
-    <p class="cal-intro">Pick who you are, then click the times you're available this week. Your picks save automatically.</p>
     <div class="legend-people">
-      <label><input type="radio" name="who" value="kara" checked onchange="setWho('kara')"> <span class="person-swatch" style="background:var(--caramel)"></span> Kara</label>
-      <label><input type="radio" name="who" value="joel" onchange="setWho('joel')"> <span class="person-swatch" style="background:var(--matcha)"></span> Joel</label>
-      <label style="color:var(--ink-soft);font-weight:400;"><span class="person-swatch" style="background:#4a7d3f"></span> Both free — go time!</label>
+      <label><span class="person-swatch" style="background:var(--caramel)"></span> Kara free</label>
+      <label><span class="person-swatch" style="background:var(--matcha)"></span> Joel free</label>
+      <label><span class="person-swatch" style="background:#4a7d3f"></span> Both free — go time! ✓</label>
     </div>
-    <div class="cal-grid">
-      <table class="cal" id="calTable"></table>
+    <div class="cal-people">
+      <div class="cal-person">
+        <div class="cal-person-head">
+          <h3><span class="person-swatch" style="background:var(--caramel)"></span> Kara's Calendar</h3>
+          <button class="btn ghost sm" onclick="clearAvailability('kara')">Clear</button>
+        </div>
+        <div class="cal-grid"><table class="cal" id="calKara"></table></div>
+      </div>
+      <div class="cal-person">
+        <div class="cal-person-head">
+          <h3><span class="person-swatch" style="background:var(--matcha)"></span> Joel's Calendar</h3>
+          <button class="btn ghost sm" onclick="clearAvailability('joel')">Clear</button>
+        </div>
+        <div class="cal-grid"><table class="cal" id="calJoel"></table></div>
+      </div>
     </div>
     <div class="both-note" id="bothNote"></div>
   </section>

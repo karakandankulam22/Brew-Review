@@ -107,7 +107,6 @@ function seedData() {
 /* ---------------- State ---------------- */
 const LS_KEY = 'brewReview.v3';
 let state = load();
-let currentWho = 'kara';
 let editingId = null;
 
 function load() {
@@ -482,41 +481,48 @@ function renderMap() {
 /* ---------------- Calendar ---------------- */
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const SLOTS = ['7–9 AM','9–11 AM','11 AM–1 PM','1–3 PM','3–5 PM','5–7 PM','7–9 PM'];
-function setWho(w) { currentWho = w; }
+const CAL_IDS = { kara: 'calKara', joel: 'calJoel' };
 function slotKey(d, s) { return d + '_' + s; }
 
+// Two separate calendars — one per person. Each shows only that person's own
+// free times; slots where BOTH are free are highlighted green in both grids.
 function buildCalendar() {
-  const t = document.getElementById('calTable');
-  let head = '<tr><th class="time-lbl">Time</th>' + DAYS.map(d => `<th>${d}</th>`).join('') + '</tr>';
-  let body = '';
-  SLOTS.forEach((slot, si) => {
-    body += `<tr><td class="time-lbl">${slot}</td>`;
-    DAYS.forEach((day, di) => {
-      body += `<td data-day="${di}" data-slot="${si}" onclick="toggleSlot(${di},${si})"><div class="slot"><i></i></div></td>`;
+  ['kara', 'joel'].forEach(person => {
+    const t = document.getElementById(CAL_IDS[person]);
+    if (!t) return;
+    let head = '<tr><th class="time-lbl">Time</th>' + DAYS.map(d => `<th>${d}</th>`).join('') + '</tr>';
+    let body = '';
+    SLOTS.forEach((slot, si) => {
+      body += `<tr><td class="time-lbl">${slot}</td>`;
+      DAYS.forEach((day, di) => {
+        body += `<td data-p="${person}" data-day="${di}" data-slot="${si}" onclick="toggleSlot('${person}',${di},${si})"><div class="slot"><i></i></div></td>`;
+      });
+      body += '</tr>';
     });
-    body += '</tr>';
+    t.innerHTML = head + body;
   });
-  t.innerHTML = head + body;
   paintCalendar();
 }
-function toggleSlot(di, si) {
+function toggleSlot(person, di, si) {
   const key = slotKey(di, si);
-  const av = state.availability[currentWho];
+  const av = state.availability[person];
   av[key] = !av[key];
   save();
   paintCalendar();
 }
 function paintCalendar() {
-  document.querySelectorAll('#calTable td[data-day]').forEach(td => {
+  document.querySelectorAll('table.cal td[data-day]').forEach(td => {
     const key = slotKey(td.dataset.day, td.dataset.slot);
-    const k = state.availability.kara[key];
-    const j = state.availability.joel[key];
+    const person = td.dataset.p;
+    const mine = !!state.availability[person][key];
+    const other = !!state.availability[person === 'kara' ? 'joel' : 'kara'][key];
     let bg = 'transparent';
-    if (k && j) bg = PERSON_COLORS.both;
-    else if (k) bg = PERSON_COLORS.kara;
-    else if (j) bg = PERSON_COLORS.joel;
+    if (mine && other) bg = PERSON_COLORS.both;      // overlap — coffee run!
+    else if (mine) bg = person === 'kara' ? PERSON_COLORS.kara : PERSON_COLORS.joel;
     td.style.background = bg;
-    td.title = (k && j) ? 'Both free!' : k ? 'Kara free' : j ? 'Joel free' : '';
+    td.style.color = '#fff';
+    td.querySelector('.slot').innerHTML = (mine && other) ? '<i style="font-style:normal;font-size:.8rem">✓</i>' : '<i></i>';
+    td.title = (mine && other) ? 'Both free!' : mine ? `${person} free` : 'Click if free';
   });
   // both-free summary
   const both = [];
@@ -527,12 +533,12 @@ function paintCalendar() {
   const note = document.getElementById('bothNote');
   note.innerHTML = both.length
     ? `<b>☕ You're both free:</b> ${both.join(' · ')}. Time for a coffee run!`
-    : `<span style="color:var(--muted)">No overlapping free times yet. Mark your availability above to find a match.</span>`;
+    : `<span style="color:var(--muted)">No overlapping free times yet. Mark your availability on both calendars to find a match.</span>`;
 }
-function clearAvailability() {
-  state.availability[currentWho] = {};
+function clearAvailability(person) {
+  state.availability[person] = {};
   save(); paintCalendar();
-  toast(`Cleared ${currentWho === 'kara' ? "Kara's" : "Joel's"} slots`);
+  toast(`Cleared ${person === 'kara' ? "Kara's" : "Joel's"} times`);
 }
 
 /* ---------------- Navigation & theme ---------------- */
